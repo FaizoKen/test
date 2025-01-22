@@ -85,8 +85,7 @@
     }
 
     .highlighted {
-      background-color: #e6e2b5; /* Yellow background for highlighted row */
-      font-weight: bold;
+      background-color: #e6e2b5;
     }
   </style>
 </head>
@@ -117,7 +116,6 @@
         </tr>
       </thead>
       <tbody id="statusTable">
-        <!-- Rows will be inserted here by JavaScript -->
       </tbody>
     </table>
   </div>
@@ -141,19 +139,21 @@
         ].filter(Boolean).join(' ') || "Less than a minute";
       }
 
+      let bots = [];
+      let filteredBots = [];
+
       let debounceTimeout;
       function debounce(callback, delay) {
         clearTimeout(debounceTimeout);
         debounceTimeout = setTimeout(callback, delay);
       }
 
-      function renderRows(bots) {
+      function renderRows(botsToRender) {
         const fragment = document.createDocumentFragment();
 
-        bots.forEach(bot => {
+        botsToRender.forEach(bot => {
           const row = document.createElement("tr");
 
-          // Add 'highlighted' class if Bot ID matches the target ID
           if (bot.bot_id === "1280984633739186400") {
             row.classList.add("highlighted");
           }
@@ -180,15 +180,16 @@
       fetch('https://status.faizo.top/api/quicksupport')
         .then(response => response.json())
         .then(botData => {
-          const bots = botData.sort((a, b) => b.max_server_count - a.max_server_count);
-          renderRows(bots);
+          bots = botData.sort((a, b) => b.max_server_count - a.max_server_count);
+          filteredBots = bots; // Cache the full list
+          renderRows(filteredBots);
 
           searchInput.addEventListener('input', event => {
             debounce(() => {
               const searchTerm = event.target.value.toLowerCase();
-              const filteredBots = bots.filter(bot => bot.server_ids?.some(id => id.toLowerCase().includes(searchTerm)));
+              filteredBots = bots.filter(bot => bot.server_ids?.some(id => id.toLowerCase().includes(searchTerm)));
               renderRows(filteredBots);
-            }, 300);  // Adjust the debounce delay as needed
+            }, 500); // Increased debounce delay
           });
         })
         .catch(error => {
