@@ -24,6 +24,7 @@
       width: 100%;
       border-collapse: collapse;
       margin: 20px 0;
+      table-layout: fixed;
     }
     table, th, td {
       border: 1px solid #ddd;
@@ -31,6 +32,7 @@
     th, td {
       padding: 10px;
       text-align: center;
+      word-wrap: break-word;
     }
     th {
       background-color: #34495e;
@@ -48,6 +50,31 @@
     .down {
       color: red;
     }
+    .search-container {
+      margin: 20px 0;
+      text-align: center;
+    }
+    .search-input {
+      padding: 10px;
+      font-size: 16px;
+      width: 80%;
+      max-width: 400px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    /* Highlight the row for the specified Bot ID */
+    .highlight {
+      background-color: #ebe29d; /* Yellow background */
+      font-weight: bold;
+    }
+    /* Default row color for non-highlighted rows */
+    tr:not(.highlight) {
+      background-color: #f0f0f0; /* Light brown background */
+    }
+    /* Hide the server ID column */
+    th:nth-child(8), td:nth-child(8) {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -57,17 +84,21 @@
 </header>
 
 <div class="container">
+  <div class="search-container">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search for Server IDs..." />
+  </div>
+
   <table>
     <thead>
       <tr>
         <th>Bot ID</th>
         <th>Shard ID</th>
-        <th>Last Update</th>
-        <th>Starting Time</th>
-        <th>Average Ping (ms)</th>
-        <th>Max Servers</th>
-        <th>Max Members</th>
-        <th>Server IDs</th>
+        <th>Last Online</th>
+        <th>Last Uptime</th>
+        <th>Current Ping (ms)</th>
+        <th>Cached Servers</th>
+        <th>Cached Members</th>
+        <th>Server IDs</th> <!-- This column will be hidden -->
         <th>Status</th>
       </tr>
     </thead>
@@ -78,31 +109,86 @@
 </div>
 
 <script>
+  // Helper function to convert milliseconds to a human-readable duration
+  function formatDuration(ms) {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+
+    const daysLeft = days % 7;
+    const hoursLeft = hours % 24;
+    const minutesLeft = minutes % 60;
+
+    let duration = "";
+    if (weeks > 0) duration += `${weeks} week${weeks > 1 ? 's' : ''} `;
+    if (daysLeft > 0) duration += `${daysLeft} day${daysLeft > 1 ? 's' : ''} `;
+    if (hoursLeft > 0) duration += `${hoursLeft} hour${hoursLeft > 1 ? 's' : ''} `;
+    if (minutesLeft > 0) duration += `${minutesLeft} minute${minutesLeft > 1 ? 's' : ''}`;
+
+    return duration.trim() || "Less than a minute";
+  }
+
   // Fetch data from the API
   fetch('https://status.faizo.top/api/quicksupport')
     .then(response => response.json())
     .then(botData => {
       const statusTable = document.getElementById("statusTable");
 
-      botData.forEach(bot => {
-        const lastUpdate = new Date(parseInt(bot.last_update));
-        const startingTime = new Date(parseInt(bot.starting_time));
-        const averagePing = bot.average_ping > 0 ? bot.average_ping : "N/A";
-        const statusClass = bot.average_ping > 0 ? "up" : "down";
+      // Store all bot data so we can filter it later
+      const bots = botData;
 
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${bot.bot_id}</td>
-          <td>${bot.shard_id}</td>
-          <td>${lastUpdate.toLocaleString()}</td>
-          <td>${startingTime.toLocaleString()}</td>
-          <td>${averagePing}</td>
-          <td>${bot.max_server_count}</td>
-          <td>${bot.max_member_count}</td>
-          <td>${bot.server_ids.join(", ")}</td>
-          <td><span class="status ${statusClass}">${bot.average_ping > 0 ? "Up" : "Down"}</span></td>
-        `;
-        statusTable.appendChild(row);
+      // Sort the bots by the number of cached servers (max_server_count) in descending order
+      bots.sort((a, b) => b.max_server_count - a.max_server_count);
+
+      // Function to render the rows based on the filtered bot data
+      function renderRows(filteredData) {
+        statusTable.innerHTML = ''; // Clear existing rows
+        filteredData.forEach(bot => {
+          const lastUpdate = new Date(parseInt(bot.last_update));
+          const startingTime = new Date(parseInt(bot.starting_time));
+          const averagePing = bot.average_ping > 0 ? bot.average_ping : "N/A";
+          const statusClass = bot.average_ping > 0 ? "up" : "down";
+
+          // Calculate uptime duration
+          const uptimeDuration = formatDuration(Date.now() - startingTime.getTime());
+
+          const row = document.createElement("tr");
+
+          // Add a highlight class if the Bot ID matches the target
+          const highlightClass = bot.bot_id === '1280984633739186400' ? 'highlight' : '';
+
+          row.className = highlightClass; // Apply highlight class if applicable
+
+          row.innerHTML = `
+            <td>${bot.bot_id}</td>
+            <td>${bot.shard_id}</td>
+            <td>${lastUpdate.toLocaleString()}</td>
+            <td>${uptimeDuration}</td>
+            <td>${averagePing}</td>
+            <td>${bot.max_server_count}</td>
+            <td>${bot.max_member_count}</td>
+            <td>${bot.server_ids && bot.server_ids.length > 0 ? bot.server_ids.join(", ") : "N/A"}</td>
+            <td><span class="status ${statusClass}">${bot.average_ping > 0 ? "Up" : "Down"}</span></td>
+          `;
+          statusTable.appendChild(row);
+        });
+      }
+
+      // Initially render all rows
+      renderRows(bots);
+
+      // Search functionality
+      document.getElementById('searchInput').addEventListener('input', function(event) {
+        const searchTerm = event.target.value.toLowerCase();
+
+        const filteredBots = bots.filter(bot => {
+          // Filter by server IDs (check if any server_id matches the search term)
+          return bot.server_ids.some(id => id.toLowerCase().includes(searchTerm));
+        });
+
+        renderRows(filteredBots);
       });
     })
     .catch(error => {
