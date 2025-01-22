@@ -62,15 +62,15 @@
       border-radius: 4px;
       border: 1px solid #ccc;
     }
-    /* Highlight the row for the specified Bot ID */
+
     .highlight {
-      background-color: #e0e0e0; /* Light brown background */
+      background-color: #e0e0e0; 
     }
-    /* Default row color for non-highlighted rows */
+
     tr:not(.highlight) {
-      background-color: #f0e8ab; /* Yellow background */
+      background-color: #f0e8ab; 
     }
-    /* Hide the server ID column */
+
     th:nth-child(8), td:nth-child(8) {
       display: none;
     }
@@ -108,7 +108,7 @@
 </div>
 
 <script>
-  // Helper function to convert milliseconds to a human-readable duration
+
   function formatDuration(ms) {
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
@@ -129,36 +129,30 @@
     return duration.trim() || "Less than a minute";
   }
 
-  // Fetch data from the API
   fetch('https://status.faizo.top/api/quicksupport')
     .then(response => response.json())
     .then(botData => {
       const statusTable = document.getElementById("statusTable");
 
-      // Store all bot data so we can filter it later
       const bots = botData;
 
-      // Sort the bots by the number of cached servers (max_server_count) in descending order
       bots.sort((a, b) => b.max_server_count - a.max_server_count);
 
-      // Function to render the rows based on the filtered bot data
       function renderRows(filteredData) {
-        statusTable.innerHTML = ''; // Clear existing rows
+        statusTable.innerHTML = ''; 
         filteredData.forEach(bot => {
           const lastUpdate = new Date(parseInt(bot.last_update));
           const startingTime = new Date(parseInt(bot.starting_time));
           const averagePing = bot.average_ping > 0 ? bot.average_ping : "N/A";
           const statusClass = bot.average_ping > 0 ? "up" : "down";
 
-          // Calculate uptime duration
           const uptimeDuration = formatDuration(Date.now() - startingTime.getTime());
 
           const row = document.createElement("tr");
 
-          // Add a highlight class if the Bot ID matches the target
           const highlightClass = bot.bot_id === '1280984633739186400' ? 'highlight' : '';
 
-          row.className = highlightClass; // Apply highlight class if applicable
+          row.className = highlightClass; 
 
           row.innerHTML = `
             <td>${bot.bot_id}</td>
@@ -175,15 +169,13 @@
         });
       }
 
-      // Initially render all rows
       renderRows(bots);
 
-      // Search functionality
       document.getElementById('searchInput').addEventListener('input', function(event) {
         const searchTerm = event.target.value.toLowerCase();
 
         const filteredBots = bots.filter(bot => {
-          // Filter by server IDs (check if any server_id matches the search term)
+
           return bot.server_ids.some(id => id.toLowerCase().includes(searchTerm));
         });
 
