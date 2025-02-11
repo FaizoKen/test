@@ -24,8 +24,8 @@ https.get(API_URL, (res) => {
                 expired: String(Math.floor(Number(jsonData.expired) / 1000))
             };
 
-            // Save to file
-            fs.writeFileSync("data.json", JSON.stringify(transformedData, null, 4));
+            // Save to file (Minified JSON)
+            fs.writeFileSync("data.json", JSON.stringify(transformedData));
             console.log("JSON transformation complete!");
         } catch (error) {
             console.error("Error parsing JSON:", error);
