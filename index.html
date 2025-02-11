@@ -6,29 +6,56 @@
     <title>JSON Converter</title>
 </head>
 <body>
+    <h2>Converted JSON</h2>
+    <pre id="output"></pre>
+
     <script>
-        async function fetchAndConvertJson() {
-            try {
-                const response = await fetch("https://status.faizo.top/api/quicksupport");
-                const jsonData = await response.json();
-
-                function convertTimestamps(data) {
-                    data.data.forEach(bot => {
-                        bot.last_updated = String(Math.floor(Number(bot.last_updated) / 1000));
-                        bot.last_uptime = String(Math.floor(Number(bot.last_uptime) / 1000));
-                    });
-                    data.expired = String(Math.floor(Number(data.expired) / 1000));
-                    return data;
+        // Original JSON data
+        const jsonData = {
+            "data": [
+                {
+                    "bot_id": "1280984633739186318",
+                    "shard_id": "0",
+                    "last_updated": "1739286600881",
+                    "last_uptime": "1739091735933",
+                    "cached_guilds": "67",
+                    "cached_users": "43433",
+                    "current_latency": "285",
+                    "is_online": true,
+                    "is_public": true
+                },
+                {
+                    "bot_id": "1154259093989629963",
+                    "shard_id": "0",
+                    "last_updated": "1739286600516",
+                    "last_uptime": "1739092203940",
+                    "cached_guilds": "1",
+                    "cached_users": "12",
+                    "current_latency": "291",
+                    "is_online": true,
+                    "is_public": false
                 }
+            ],
+            "expired": "1739287065797"
+        };
 
-                const convertedJson = convertTimestamps(jsonData);
-                document.body.textContent = JSON.stringify(convertedJson);
-            } catch (error) {
-                document.body.textContent = JSON.stringify({ error: "Error fetching JSON", details: error.toString() });
-            }
+        // Function to process JSON
+        function transformJson(data) {
+            return {
+                data: data.data.map(bot => ({
+                    ...bot,
+                    last_updated: String(Math.floor(Number(bot.last_updated) / 1000)),
+                    last_uptime: String(Math.floor(Number(bot.last_uptime) / 1000))
+                })),
+                expired: String(Math.floor(Number(data.expired) / 1000))
+            };
         }
 
-        fetchAndConvertJson();
+        // Transform JSON
+        const transformedData = transformJson(jsonData);
+
+        // Display result
+        document.getElementById("output").textContent = JSON.stringify(transformedData, null, 4);
     </script>
 </body>
 </html>
