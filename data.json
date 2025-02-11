@@ -3,25 +3,25 @@
         {
             "bot_id": "1280984633739186318",
             "shard_id": "0",
-            "last_updated": "1739289900",
+            "last_updated": "1739291100",
             "last_uptime": "1739091735",
             "cached_guilds": "68",
             "cached_users": "43438",
-            "current_latency": "787",
+            "current_latency": "276",
             "is_online": true,
             "is_public": true
         },
         {
             "bot_id": "1154259093989629963",
             "shard_id": "0",
-            "last_updated": "1739289900",
+            "last_updated": "1739291100",
             "last_uptime": "1739092203",
             "cached_guilds": "1",
             "cached_users": "12",
-            "current_latency": "405",
+            "current_latency": "294",
             "is_online": true,
             "is_public": false
         }
     ],
-    "expired": "1739290488"
+    "expired": "1739291441"
 }
